@@ -21,10 +21,10 @@ The tool will be installed in the __Connectors__ category.
 
 ## Requirements
 
-The tool installs the (https://docs.snowflake.com/en/user-guide/python-connector.html | official Snowflake Connector library)
+The tool installs the official Snowflake Connector library|(https://docs.snowflake.com/en/user-guide/python-connector.html)
 
 ## Usage
-Configure the tool using the setting for you Snowflake instance. Note that the account is the string before __snowflakecomputing.com__
+Configure the tool using the setting for you Snowflake instance. Note that the account is the string to the left of __snowflakecomputing.com__ in your URL.
 
 ## Outputs
 The tool has no output.
@@ -32,4 +32,4 @@ The tool has no output.
 ## Usage
 This workflow demonstrates the tool in use. The workflow shown here:
 
-<img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/CSVAppend_workflow.png" width="1000" alt="CSV Append Workflow">
+<img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/configuration.png" width="1000" alt="Snowflake Workflow">
