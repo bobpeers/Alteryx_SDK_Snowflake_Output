@@ -1,6 +1,4 @@
 # Alteryx SDK Snowflake Output
-Alteryx Python SDK tool to write output to a Snowflake Databbase
-
 Custom Alteryx SDK tool to output data to a Snowflake Database
 
 The tools allows for:
@@ -25,6 +23,12 @@ The tool installs the official [Snowflake Connector library](https://docs.snowfl
 
 ## Usage
 Configure the tool using the setting for you Snowflake instance. Note that the account is the string to the left of __snowflakecomputing.com__ in your URL.
+
+If you do not select a temporary path then the tool will use the default Alteryx temp path. In this path the tool will create subfolders based on the current UNIX time.
+When running temp csv files will be written to this location before being gzipped and uploaded to Snowflake. The gzipped files are not deleted automatically by the tool. The tool will create csv files with a maximum size of 25.000.000 records per file.
+
+## Logging
+The tool will create log files for each run in the temp folder supplied. These logs contain detailed information on the Snowflake connection and can be used in case of unexected errors.
 
 ## Outputs
 The tool has no output.
