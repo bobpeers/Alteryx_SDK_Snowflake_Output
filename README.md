@@ -17,7 +17,7 @@ Download the yxi file and double click to install in Alteyrx.
 
 The tool will be installed in the __Connectors__ category.
 
-<img src="hhttps://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/toolbar.png" alt="Snowflake Install Toolbar">
+<img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/toolbar.png" alt="Snowflake Install Toolbar">
 
 ## Requirements
 
