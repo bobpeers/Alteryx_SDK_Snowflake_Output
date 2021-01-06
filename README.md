@@ -21,7 +21,7 @@ The tool will be installed in the __Connectors__ category.
 
 ## Requirements
 
-The tool installs the official Snowflake Connector library|(https://docs.snowflake.com/en/user-guide/python-connector.html)
+The tool installs the official [Snowflake Connector library](https://docs.snowflake.com/en/user-guide/python-connector.html)
 
 ## Usage
 Configure the tool using the setting for you Snowflake instance. Note that the account is the string to the left of __snowflakecomputing.com__ in your URL.
