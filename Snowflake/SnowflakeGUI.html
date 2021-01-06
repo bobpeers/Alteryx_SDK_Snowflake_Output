@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html style="padding:20px">
+
+<head>
+  <meta charset="utf-8">
+  <title>M2M Payment</title>
+  <script type="text/javascript">
+    document.write('<link rel="import" href="' + window.Alteryx.LibDir + '2/lib/includes.html">');
+  </script>
+  <style>
+
+    h1 {
+      padding: 10px 0 5px 0;
+      margin: 15px 5px 5px 0;
+      font-size: 1.556em;
+      font-weight: normal;
+      color: #52617f;
+    }
+
+    label {
+      color: #8698ba;
+      font-size: 1.167em;
+      margin: 6px 0px 3px 0;
+      padding: 0;
+      font-weight: normal;
+      line-height: 1.42857143;
+    }
+
+    fieldset {
+      border:none;
+    }
+
+    body {
+      font-size: 10pt;
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    section,
+    label,
+    select,
+    checkbox,
+    ayx {
+      padding: 10px 0 10px 0;
+    }
+
+    .header-ruler {
+      background-color: #cccccc;
+      height: 1px;
+      border: 0 none;
+      flex-grow: 1;
+      margin-top: 0.625em;
+      margin-left: 10px;
+    }
+    .header-message {
+      color: #52617f;
+      font-size: 1.78em;
+      font-weight: normal;
+      padding-bottom: 0px;
+      margin: 0px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+    }
+  </style>
+
+<body>
+  <div class="header-message">
+    <div>XMSG("Snowflake Output")</div>
+    <hr class="header-ruler"></hr>
+    </div>
+  <form>
+    <fieldset>
+      <section>
+        <label>XMSG("Snowflake Account")</label>
+		    <ayx data-ui-props='{type:"TextBox", widgetId:"account"}' data-item-props="{dataName:'account'}"></ayx>
+
+        <label>XMSG("Snowflake User")</label>
+        <ayx data-ui-props='{type:"TextBox", widgetId:"user"}' data-item-props="{dataName:'user'}"></ayx>
+
+        <label>XMSG("Snowflake Password")</label> 
+        <ayx data-ui-props='{type:"TextBox", widgetId:"password"}'></ayx>
+
+        <label>XMSG("Snowflake Warehouse:")</label>
+		<ayx data-ui-props='{type:"TextBox", widgetId:"warehouse"}' data-item-props="{dataName:'warehouse'}"></ayx>
+
+        <label>XMSG("Snowflake Database")</label>
+        <ayx data-ui-props='{type:"TextBox", widgetId:"db"}' data-item-props="{dataName:'database'}"></ayx>
+
+        <label>XMSG("Snowflake Schema")</label>
+        <ayx data-ui-props='{type:"TextBox", widgetId:"schema"}' data-item-props="{dataName:'schema'}"></ayx>
+		
+		<label>XMSG("Temp location to save output before upload (optional)")</label>
+        <ayx data-ui-props='{type:"FileBrowse", widgetId:"folder", browseType:"Folder"}'
+          data-item-props="{dataName:'temp_dir'}"></ayx>
+		  
+		<label>XMSG("Snowflake Table")</label>
+        <ayx data-ui-props='{type:"TextBox", widgetId:"table"}' data-item-props="{dataName:'table'}"></ayx> 
+
+      </section>
+	
+	  <section>
+        <h2>XMSG("Select Write Option")</h2>
+        <ayx data-ui-props='{type:"RadioGroup", widgetId:"SQLType"}'></ayx>
+      </section>
+	  
+
+	   <section id='key'>
+		<label>XMSG("Key Field:")</label>
+    <ayx data-ui-props="{widgetId: 'key', type: 'DropDown'}" data-item-props="{dataName: 'key', dataType: 'FieldSelector', fieldType: 'All', includeNoneOption: true, anchorIndex:'0', connectionIndex:'0'}"></ayx>
+    </section>
+	  
+	
+	  
+    </fieldset>
+  </form>
+  <script type="text/javascript">
+  
+
+    Alteryx.Gui.BeforeLoad = function (manager, AlteryxDataItems, json) {
+
+    // Create password data item
+    var passwordDataItem = new AlteryxDataItems.SimpleString('password', {password: true, encryptionMode: 'machine'})
+    manager.addDataItem(passwordDataItem)
+    // Bind to TextBox widget
+    manager.bindDataItemToWidget(passwordDataItem, 'password')
+			
+    // Radio Group
+    // -----------
+    var stringSelector = new AlteryxDataItems.StringSelector('sql_type', {
+      optionList: [
+        { label: 'XMSG("Create + Insert")', value: "create" },
+        { label: 'XMSG("Delete + Insert")', value: "truncate" },
+		{ label: 'XMSG("Append")', value: "append" },
+		{ label: 'XMSG("Update + Insert if new")', value: "update" },
+      ]
+    })
+    manager.addDataItem(stringSelector)
+    manager.bindDataItemToWidget(stringSelector, 'SQLType') // Bind to widget
+    window.Alteryx.Gui.Manager.getDataItem('sql_type').setValue('create')
+    }
+
+  const hide_options = () => {
+    if (Alteryx.Gui.Manager.getDataItem('sql_type').getValue() == 'create' || Alteryx.Gui.Manager.getDataItem('sql_type').getValue() == 'update') {
+      document.getElementById('key').style.display = 'block'
+    }
+    else {
+      document.getElementById('key').style.display = 'none'
+    }
+
+  }
+
+
+  Alteryx.Gui.AfterLoad = (manager, AlteryxDataItems) => {
+    hide_options()
+    manager.getDataItem('sql_type').registerPropertyListener('value', hide_options)
+  }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<AlteryxJavaScriptPlugin>
+  <EngineSettings ToolFamily="Snowflake" EngineDll="Python" EngineDllEntryPoint="SnowflakeEngine.py" SDKVersion="10.1" />
+  <GuiSettings Html="SnowflakeGUI.html" Icon="Snowflake/SnowflakeIcon.png" Help="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output" SDKVersion="10.1">
+    <InputConnections>
+      <Connection Name="Input" AllowMultiple="False" Optional="False" Type="Connection" Label=""/>
+    </InputConnections>
+  </GuiSettings>
+  <Properties>
+    <MetaInfo>
+      <Name>Snowflake Output</Name>
+      <Description>Output data to Snowflake</Description>
+      <CategoryName>Connectors</CategoryName>
+      <SearchTags>snowflake, snow, database, saas</SearchTags>
+      <ToolVersion>1.0</ToolVersion>
+      <Author>Bob Peers</Author>
+      <Company></Company>
+      <Copyright>2021</Copyright>
+    </MetaInfo>
+  </Properties>
+</AlteryxJavaScriptPlugin>
