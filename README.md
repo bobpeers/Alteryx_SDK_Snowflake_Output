@@ -24,6 +24,8 @@ The tool installs the official [Snowflake Connector library](https://docs.snowfl
 ## Usage
 Configure the tool using the setting for you Snowflake instance. Note that the account is the string to the left of __snowflakecomputing.com__ in your URL.
 
+If you are creating a new table the key is optional but you must select a key when updating/insert new.
+
 If you do not select a temporary path then the tool will use the default Alteryx temp path. Using this path the tool will create subfolders based on the current UNIX time.
 
 When running temp csv files will be written to this location before being gzipped and uploaded to Snowflake.
@@ -48,12 +50,12 @@ This workflow demonstrates the tool in use. The workflow shown here:
 <img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/configuration.png" width="1000" alt="Snowflake Workflow">
 
 ## Tech Notes
-Internally the tool uses the Snowplake ´PUT´command to bulk upload files so is very efficient. The process is as follows:
+Internally the tool uses the Snowplake `PUT` command to bulk upload files so is very efficient. The process is as follows:
 
 1. Data is written to CSV files in chunks of 100k records (all quoted and pipe delimited)
 2. CSV files are individually gzipped
 3. If we need to create a table we convert Alteryx data types to Snowflake datatype and create a table
-4. Data is uploaded to a table stage using the ´PUT´command
+4. Data is uploaded to a table stage using the `PUT` command
 5. If updating we upload to a temporary table
-6. Data is copied from the staging area to the target table using ´COPY´
-7. If updating data is merged from the temporary table to the target table using ´MERGE´
+6. Data is copied from the staging area to the target table using `COPY`
+7. If updating, data is merged from the temporary table to the target table using `MERGE`
