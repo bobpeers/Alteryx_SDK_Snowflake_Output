@@ -33,6 +33,7 @@ The gzipped files are not deleted automatically by the tool. The tool will creat
 <img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/logging.png" alt="Snowflake Temop folder">
 
 |Import Note on Primary keys|
+|:---|
 |Snowflake does not enforce primary keys so setting as key will create a primary key and set the field as not allowing null values but it is still possible to append data to a table with duplicate valiues in the primary key field.|
 
 ## Logging
