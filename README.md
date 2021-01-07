@@ -32,13 +32,27 @@ The gzipped files are not deleted automatically by the tool. The tool will creat
 
 <img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/logging.png" alt="Snowflake Temop folder">
 
+|Import Note on Primary keys|
+|Snowflake does not enforce primary keys so setting as key will create a primary key and set the field as not allowing null values but it is still possible to append data to a table with duplicate valiues in the primary key field.|
+
 ## Logging
 The tool will create log files for each run in the temp folder supplied. These logs contain detailed information on the Snowflake connection and can be used in case of unexected errors.
 
 ## Outputs
 The tool has no output.
 
-## Usage
+## Example Configuration
 This workflow demonstrates the tool in use. The workflow shown here:
 
 <img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/configuration.png" width="1000" alt="Snowflake Workflow">
+
+## Tech Notes
+Internally the tool uses the Snowplake ´PUT´command to bulk upload files so is very efficient. The process is as follows:
+
+1. Data is written to CSV files in chunks of 100k records (all quoted and pipe delimited)
+2. CSV files are individually gzipped
+3. If we need to create a table we convert Alteryx data types to Snowflake datatype and create a table
+4. Data is uploaded to a table stage using the ´PUT´command
+5. If updating we upload to a temporary table
+6. Data is copied from the staging area to the target table using ´COPY´
+7. If updating data is merged from the temporary table to the target table using ´MERGE´
