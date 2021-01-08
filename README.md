@@ -49,7 +49,7 @@ This workflow demonstrates the tool in use. The workflow shown here:
 
 <img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/configuration.png" width="1000" alt="Snowflake Workflow">
 
-## Tech Notes
+## Technical Notes
 Internally the tool uses the Snowplake `PUT` command to bulk upload files so is very efficient. The process is as follows:
 
 1. Data is written to CSV files in chunks of 100k records (all quoted and pipe delimited)
