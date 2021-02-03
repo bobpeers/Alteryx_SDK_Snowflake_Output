@@ -35,7 +35,7 @@ class AyxPlugin:
         self.alteryx_engine = alteryx_engine
 
         # Basic lists of text inputs
-        self.input_list = ['account', 'user', 'password', 'warehouse', 'database', 'schema', 'table']
+        self.input_list: list = ['account', 'user', 'password', 'warehouse', 'database', 'schema', 'table']
 
         # Create text box variables
         for item in self.input_list:
@@ -45,7 +45,7 @@ class AyxPlugin:
         self.temp_dir: str = None
         self.key: str = None
 
-        self.is_initialized = True
+        self.is_initialized: bool = True
         self.single_input = None
 
         # Alteryx to Snowfake data type mappings
@@ -97,8 +97,12 @@ class AyxPlugin:
                 self.display_error_msg(f"Enter a valid {item}")
                 return False
 
+        # remove protocol if added
+        if '//' in self.account:
+            self.account = self.account[self.account.find('//') + 2:]
+
         # Password field
-        self.dectypt_password: str = self.alteryx_engine.decrypt_password(self.password, 0)
+        self.decrypt_password: str = self.alteryx_engine.decrypt_password(self.password, 0)
 
         # Check temp_dir and use Alteryx default if None
         if not self.temp_dir:
@@ -109,7 +113,6 @@ class AyxPlugin:
             if error_msg != '':
                 self.display_error_msg(error_msg)
                 return False
-
 
     def pi_add_incoming_connection(self, str_type: str, str_name: str) -> object:
         """
@@ -201,10 +204,10 @@ class AyxPlugin:
                 with gzip.open(file_path +'.gz', 'ab',compresslevel=3) as w:
                     w.write(chunk)
         os.remove(file_path)
-    
+
     def create_sql(self, key: str, data_type: str, size: int, scale: int) -> str:
         '''
-        Generates Snoeflake data type from Alteryx data type.
+        Generates Snowflake data type from Alteryx data type.
         Reduces max length if neccessary and adds key field for
         create statements
         '''
@@ -248,6 +251,9 @@ class IncomingInterface:
         self.file_size_limit: int = 25000000
         self.cache_size: int = 100000
 
+    def clean_field(self, field: str) -> str:
+        return field.strip() if ' ' not in field.strip() else f'"{field.strip()}"'
+
     def get_file_name(self, root: str, base_name: str, counter: int) -> str:
         return os.path.join(root, f'{base_name}{counter}.csv')
 
@@ -258,35 +264,35 @@ class IncomingInterface:
         :param record_info_in: A RecordInfo object for the incoming connection's fields.
         :return: True for success, otherwise False.
         """
+        field_name: str = ''
+
+        if self.parent.alteryx_engine.get_init_var(self.parent.n_tool_id, 'UpdateOnly') == 'True' or not self.parent.is_initialized:
+            return False
 
         self.record_info_in = record_info_in  # For later reference.
 
         # Storing the field names to use when writing data out.
         for field in range(record_info_in.num_fields):
-            self.field_lists.append([record_info_in[field].name])
-            self.headers.append(record_info_in[field].name)
-            self.sql_list[record_info_in[field].name] = (str(record_info_in[field].type), record_info_in[field].size, record_info_in[field].scale)
+            field_name = self.clean_field(record_info_in[field].name)
+            self.field_lists.append([field_name])
+            self.headers.append(field_name)
+            self.sql_list[field_name] = (str(record_info_in[field].type), record_info_in[field].size, record_info_in[field].scale)
 
         #self.parent.display_info(str(self.sql_list))
-
-        # stop if error before
-        if not self.parent.is_initialized:
-            return False
 
         self.timestamp = str(int(time.time()))
         self.parent.temp_dir = os.path.join(self.parent.temp_dir, self.timestamp)
 
         # Create filepaths when running
-        if self.parent.alteryx_engine.get_init_var(self.parent.n_tool_id, 'UpdateOnly') == 'False':
-            self.csv_file = self.get_file_name(self.parent.temp_dir, self.parent.table, self.file_counter)
-            
-            path = os.path.dirname(self.csv_file)
+        self.csv_file = self.get_file_name(self.parent.temp_dir, self.parent.table, self.file_counter)
+        
+        path = os.path.dirname(self.csv_file)
 
-            if not os.path.exists(os.path.abspath(path)):
-                os.makedirs(os.path.abspath(path))
-            
-            # Logging setup
-            logging.basicConfig(filename=os.path.join(path, 'snowflake_connector.log'), format='%(asctime)s - %(message)s', level=logging.INFO)
+        if not os.path.exists(os.path.abspath(path)):
+            os.makedirs(os.path.abspath(path))
+        
+        # Logging setup
+        logging.basicConfig(filename=os.path.join(path, 'snowflake_connector.log'), format='%(asctime)s - %(message)s', level=logging.INFO)
 
         return True
 
@@ -306,7 +312,7 @@ class IncomingInterface:
         # Storing the string data of in_record
         for field in range(self.record_info_in.num_fields):
             in_value = self.record_info_in[field].get_as_string(in_record)
-            self.field_lists[field].append(in_value) if in_value is not None else self.field_lists[field].append('')
+            self.field_lists[field].append(in_value) if in_value is not None else self.field_lists[field].append('NULL')
 
         # Writing when chunk mark is met
         if self.counter % self.cache_size == 0:
@@ -338,6 +344,8 @@ class IncomingInterface:
         Handles writing out any residual data out.
         Called when the incoming connection has finished passing all of its records.
         """
+        con: snowflake.connector.connection = None
+        
         if self.parent.alteryx_engine.get_init_var(self.parent.n_tool_id, 'UpdateOnly') == 'True' or not self.parent.is_initialized:
             return False
 
@@ -358,32 +366,33 @@ class IncomingInterface:
             f = os.path.join(self.parent.temp_dir, f)
             self.parent.display_file(f'{f} | {f} gzip file is created')
 
+        # clean key field
+        if self.parent.key:
+            self.parent.key = self.clean_field(self.parent.key)
+
+        # path to gzip files
+        gzip_file = os.path.join(self.parent.temp_dir, self.parent.table).replace('\\', '//')
+
         # Create Snowflake connection
+
         try:
             con = snowflake.connector.connect(
                                             user=self.parent.user,
-                                            password=self.parent.dectypt_password,
+                                            password=self.parent.decrypt_password,
                                             account=self.parent.account,
                                             warehouse=self.parent.warehouse,
                                             database=self.parent.database,
-                                            schema=self.parent.schema
+                                            schema=self.parent.schema,
+                                            ocsp_fail_open=True
                                             )
-        except snowflake.connector.ProgrammingError as e:
-            self.parent.display_error_msg(f'Unable to open connection to {self.parent.account}')
-            logging.error(str(e))
 
-        # Set warehouse and schema
-        try:
+
+            # Set warehouse and schema
+
             con.cursor().execute(f"USE WAREHOUSE {self.parent.warehouse}")
             con.cursor().execute(f"USE SCHEMA {self.parent.database}.{self.parent.schema}")
-
-        except snowflake.connector.ProgrammingError as e:
-            self.parent.display_error_msg(f'Unable to use {self.parent.schema}.{self.parent.database}')
-            logging.error(str(e))
-
-            
-        # Execute Table Creation #
-        try:
+        
+            # Execute Table Creation #
             if self.parent.sql_type in ('create', 'update'):
                 if self.parent.sql_type == 'create':
                     table_sql: str = f"Create or Replace table {self.parent.table}  ({', '.join([self.parent.create_sql(k,v,s,c) for k, (v,s,c) in self.sql_list.items()])}"
@@ -393,26 +402,19 @@ class IncomingInterface:
                 table_sql += f', PRIMARY KEY ({self.parent.key}))' if self.parent.key else ')'
 
                 con.cursor().execute(table_sql)
-                
-        except snowflake.connector.ProgrammingError as e:
-            self.parent.display_error_msg(f'Unable to create/update {self.parent.table}')
-            logging.error(str(e))     
 
+            # PUT and COPY to Snowflake
 
-        # PUT and COPY to Snowflake
-        gzip_file = os.path.join(self.parent.temp_dir, self.parent.table).replace('\\', '//')
-
-        try:
             if self.parent.sql_type == 'truncate':
                 con.cursor().execute(f'truncate table {self.parent.table}')
 
             if self.parent.sql_type in ('create', 'truncate', 'append'):
                 con.cursor().execute("PUT 'file://{0}*' @%{1} PARALLEL=64 OVERWRITE=TRUE".format(gzip_file, self.parent.table))
-                con.cursor().execute("""COPY INTO {0} FILE_FORMAT = (TYPE=CSV FIELD_DELIMITER='|' COMPRESSION=GZIP SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"') PURGE = TRUE""".format(self.parent.table))
+                con.cursor().execute("""COPY INTO {0} FILE_FORMAT = (TYPE=CSV FIELD_DELIMITER='|' NULL_IF='NULL' COMPRESSION=GZIP SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"') PURGE = TRUE""".format(self.parent.table))
 
             elif self.parent.sql_type == 'update':
                 con.cursor().execute("PUT 'file://{0}*' @%tmp PARALLEL=64 OVERWRITE=TRUE".format(gzip_file))
-                con.cursor().execute("""COPY INTO tmp FILE_FORMAT = (TYPE=CSV FIELD_DELIMITER='|' COMPRESSION=GZIP SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"') PURGE = TRUE""")
+                con.cursor().execute("""COPY INTO tmp FILE_FORMAT = (TYPE=CSV FIELD_DELIMITER='|' NULL_IF='NULL' COMPRESSION=GZIP SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"') PURGE = TRUE""")
 
 
                 insert_fields = ', '.join(self.sql_list)
@@ -428,11 +430,14 @@ class IncomingInterface:
 
                 con.cursor().execute(merge_query)
 
-                self.parent.display_info(f'Written {self.counter} records to {self-parent.table}')
+                self.parent.display_info(f'Written {self.counter} records to {self.parent.table}')
 
-        except snowflake.connector.ProgrammingError as e:
-            self.parent.display_error_msg(f'Unable to add data to {self.parent.table}')
+        except Exception as e:
             logging.error(str(e))
+            self.parent.display_error_msg(f'Error {e.errno} ({e.sqlstate}): {e.msg} ({e.sfqid})')
+        finally:
+            if con:
+                con.close()
         
         self.parent.display_info('Snowflake transaction complete')
 

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>M2M Payment</title>
+  <title>Snowflake Output</title>
   <script type="text/javascript">
     document.write('<link rel="import" href="' + window.Alteryx.LibDir + '2/lib/includes.html">');
   </script>
@@ -130,8 +130,8 @@
     // -----------
     var stringSelector = new AlteryxDataItems.StringSelector('sql_type', {
       optionList: [
-        { label: 'XMSG("Create + Insert")', value: "create" },
-        { label: 'XMSG("Delete + Insert")', value: "truncate" },
+        { label: 'XMSG("Create (drop if exists) + Insert")', value: "create" },
+        { label: 'XMSG("Delete existing records + Insert")', value: "truncate" },
 		{ label: 'XMSG("Append")', value: "append" },
 		{ label: 'XMSG("Update + Insert if new")', value: "update" },
       ]
