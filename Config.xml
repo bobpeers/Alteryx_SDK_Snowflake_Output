@@ -12,7 +12,7 @@
       <Description>Output data to Snowflake</Description>
       <CategoryName>Connectors</CategoryName>
       <SearchTags>snowflake, snow, database, saas</SearchTags>
-      <ToolVersion>1.0</ToolVersion>
+      <ToolVersion>1.1</ToolVersion>
       <Author>Bob Peers</Author>
       <Company></Company>
       <Copyright>2021</Copyright>
