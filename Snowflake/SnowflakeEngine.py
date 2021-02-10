@@ -5,6 +5,7 @@ Although defining IncomingInterface is optional, the interface methods are neede
 
 import AlteryxPythonSDK as Sdk
 import xml.etree.ElementTree as Et
+import reserved
 import time
 import csv
 import os
@@ -14,6 +15,8 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import snowflake.connector
 import logging
+
+VERSION = '1,3'
 
 
 class AyxPlugin:
@@ -251,9 +254,6 @@ class IncomingInterface:
         self.file_size_limit: int = 25000000
         self.cache_size: int = 100000
 
-    def clean_field(self, field: str) -> str:
-        return field.strip() if ' ' not in field.strip() else f'"{field.strip()}"'
-
     def get_file_name(self, root: str, base_name: str, counter: int) -> str:
         return os.path.join(root, f'{base_name}{counter}.csv')
 
@@ -269,16 +269,15 @@ class IncomingInterface:
         if self.parent.alteryx_engine.get_init_var(self.parent.n_tool_id, 'UpdateOnly') == 'True' or not self.parent.is_initialized:
             return False
 
+        self.parent.display_info(f'Running Snowflake Output version {VERSION}')
         self.record_info_in = record_info_in  # For later reference.
 
         # Storing the field names to use when writing data out.
         for field in range(record_info_in.num_fields):
-            field_name = self.clean_field(record_info_in[field].name)
+            field_name = reserved.reserved_words(record_info_in[field].name)
             self.field_lists.append([field_name])
             self.headers.append(field_name)
             self.sql_list[field_name] = (str(record_info_in[field].type), record_info_in[field].size, record_info_in[field].scale)
-
-        #self.parent.display_info(str(self.sql_list))
 
         self.timestamp = str(int(time.time()))
         self.parent.temp_dir = os.path.join(self.parent.temp_dir, self.timestamp)
@@ -368,7 +367,7 @@ class IncomingInterface:
 
         # clean key field
         if self.parent.key:
-            self.parent.key = self.clean_field(self.parent.key)
+            self.parent.key = reserved.reserved_words(self.parent.key)
 
         # path to gzip files
         gzip_file = os.path.join(self.parent.temp_dir, self.parent.table).replace('\\', '//')
@@ -396,10 +395,11 @@ class IncomingInterface:
             if self.parent.sql_type in ('create', 'update'):
                 if self.parent.sql_type == 'create':
                     table_sql: str = f"Create or Replace table {self.parent.table}  ({', '.join([self.parent.create_sql(k,v,s,c) for k, (v,s,c) in self.sql_list.items()])}"
+
                 elif self.parent.sql_type == 'update':
                     table_sql: str = f"Create or Replace TEMPORARY TABLE tmp  ({', '.join([self.parent.create_sql(k,v,s,c) for k, (v,s,c) in self.sql_list.items()])}"
 
-                table_sql += f', PRIMARY KEY ({self.parent.key}))' if self.parent.key else ')'
+                table_sql += f', PRIMARY KEY ({self.parent.key}))' if self.parent.key != 'None' else ')'
 
                 con.cursor().execute(table_sql)
 
@@ -430,8 +430,6 @@ class IncomingInterface:
 
                 con.cursor().execute(merge_query)
 
-                self.parent.display_info(f'Written {self.counter} records to {self.parent.table}')
-
         except Exception as e:
             logging.error(str(e))
             self.parent.display_error_msg(f'Error {e.errno} ({e.sqlstate}): {e.msg} ({e.sfqid})')
@@ -440,5 +438,3 @@ class IncomingInterface:
                 con.close()
         
         self.parent.display_info('Snowflake transaction complete')
-
-            
