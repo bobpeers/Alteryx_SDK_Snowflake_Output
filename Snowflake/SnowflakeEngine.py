@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 import snowflake.connector
 import logging
 
-VERSION = '1,3'
+VERSION = '1.4'
 
 
 class AyxPlugin:
@@ -89,7 +89,7 @@ class AyxPlugin:
         self.key = root.find('key').text  if 'key' in str_xml else None
 
         # Check key is selected
-        if self.sql_type == 'update' and self.key == 'None':
+        if self.sql_type == 'update' and not self.key:
             self.display_error_msg(f"Please select a valid update key")
             return False
 
@@ -399,7 +399,7 @@ class IncomingInterface:
                 elif self.parent.sql_type == 'update':
                     table_sql: str = f"Create or Replace TEMPORARY TABLE tmp  ({', '.join([self.parent.create_sql(k,v,s,c) for k, (v,s,c) in self.sql_list.items()])}"
 
-                table_sql += f', PRIMARY KEY ({self.parent.key}))' if self.parent.key != 'None' else ')'
+                table_sql += f', PRIMARY KEY ({self.parent.key}))' if self.parent.key else ')'
 
                 con.cursor().execute(table_sql)
 

@@ -107,8 +107,8 @@
 	  
 
 	   <section id='key'>
-		<label>XMSG("Key Field:")</label>
-    <ayx data-ui-props="{widgetId: 'key', type: 'DropDown'}" data-item-props="{dataName: 'key', dataType: 'FieldSelector', fieldType: 'All', includeNoneOption: true, anchorIndex:'0', connectionIndex:'0'}"></ayx>
+		<label id='keyLabel'>XMSG("Key Field:")</label>
+    <ayx data-ui-props="{widgetId: 'key', type: 'DropDown', clearable: true}" data-item-props="{dataName: 'key', dataType: 'FieldSelector', fieldType: 'All', includeNoneOption: false, anchorIndex:'0', connectionIndex:'0'}"></ayx>
     </section>
 	  
 	
@@ -142,8 +142,16 @@
     }
 
   const hide_options = () => {
-    if (Alteryx.Gui.Manager.getDataItem('sql_type').getValue() == 'create' || Alteryx.Gui.Manager.getDataItem('sql_type').getValue() == 'update') {
+    var updateVal = Alteryx.Gui.Manager.getDataItem('sql_type').getValue()
+    if (updateVal == 'create' || updateVal == 'update') {
       document.getElementById('key').style.display = 'block'
+      window.Alteryx.Gui.Manager.getDataItem('key').setValue('')
+      if (updateVal == 'create') {
+        document.getElementById('keyLabel').innerText = 'Key field (optional)'
+      }
+      else {
+        document.getElementById('keyLabel').innerText = 'Key field (required)'
+      }
     }
     else {
       document.getElementById('key').style.display = 'none'
