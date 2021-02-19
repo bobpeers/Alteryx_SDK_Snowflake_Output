@@ -2,8 +2,9 @@
 # if field has leading/trailing spaces remove
 # if field has spaces then quote
 # if field is reserved then quote
+import re
 
-def reserved_words(field: str) -> str:
+def reserved_words(field: str, case_sensitive: bool) -> str:
     reserved_list: list = ['ACCOUNT',
                     'ALL',
                     'ALTER',
@@ -95,8 +96,15 @@ def reserved_words(field: str) -> str:
                     'WHENEVER',
                     'WHERE',
                     'WITH']
-    field = field.strip()
-    if ' ' in field:
+
+    # regex for valid object name
+    p = re.compile('^[A-Za-z_][A-Za-z0-9_$]{1,254}$')
+    # limit to 255 chars
+    field = field.strip()[:255]
+
+    if case_sensitive == True:
+        return f'"{field}"'
+    elif not p.match(field):
         return f'"{field}"'
     elif field.upper() in reserved_list:
         return f'"{field.upper()}"'

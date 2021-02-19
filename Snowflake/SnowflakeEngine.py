@@ -5,7 +5,7 @@ Although defining IncomingInterface is optional, the interface methods are neede
 
 import AlteryxPythonSDK as Sdk
 import xml.etree.ElementTree as Et
-import reserved
+from reserved import reserved_words
 import time
 import csv
 import os
@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 import snowflake.connector
 import logging
 
-VERSION = '1.4'
+VERSION = '1.5'
 
 
 class AyxPlugin:
@@ -44,9 +44,12 @@ class AyxPlugin:
         for item in self.input_list:
             setattr(AyxPlugin, item, None)
 
+        self.auth_type: str = None
+        self.okta_url: str = None
         self.sql_type: str = None
         self.temp_dir: str = None
         self.key: str = None
+        self.case_sensitive: bool = False
 
         self.is_initialized: bool = True
         self.single_input = None
@@ -56,7 +59,7 @@ class AyxPlugin:
         self.var_type['bool'] = 'BOOLEAN'
         self.var_type['byte'] = 'NUMBER(3, 0)'
         self.var_type['date'] = 'DATE'
-        self.var_type['dateTime'] = 'TIMESTAMP_NTZ(9)'
+        self.var_type['datetime'] = 'TIMESTAMP_NTZ(9)'
         self.var_type['double'] = 'DOUBLE'
         self.var_type['fixeddecimal'] = 'NUMBER'
         self.var_type['float'] = 'FLOAT'
@@ -76,6 +79,10 @@ class AyxPlugin:
         Called when the Alteryx engine is ready to provide the tool configuration from the GUI.
         :param str_xml: The raw XML from the GUI.
         """
+        # stop workflow is output tools are disbaled in runtime settings
+        if self.alteryx_engine.get_init_var(self.n_tool_id, 'DisableAllOutput') == 'True':
+            self.is_initialized = False
+            return False
 
         # Getting the user-entered file path string from the GUI, to use as output path.
         root = Et.fromstring(str_xml)
@@ -84,9 +91,21 @@ class AyxPlugin:
         for item in self.input_list:
             setattr(AyxPlugin, item, root.find(item).text if item in str_xml else None)
 
+        self.auth_type = root.find('auth_type').text  if 'auth_type' in str_xml else None
+        self.okta_url = root.find('okta_url').text  if 'okta_url' in str_xml else None
         self.temp_dir = root.find('temp_dir').text  if 'temp_dir' in str_xml else None
         self.sql_type = root.find('sql_type').text  if 'sql_type' in str_xml else None
         self.key = root.find('key').text  if 'key' in str_xml else None
+        self.case_sensitive = root.find('case_sensitive').text == 'True' if 'case_sensitive' in str_xml else False
+
+        # check for okta url is using okta
+        if self.auth_type == 'okta':
+            if not self.okta_url:
+                self.display_error_msg(f"Enter a valid Okta URL when authenticating using Okta")
+                return False 
+            elif 'http' not in self.okta_url:
+                self.display_error_msg(f"Supplied Okta URL is not valid")
+                return False        
 
         # Check key is selected
         if self.sql_type == 'update' and not self.key:
@@ -274,7 +293,7 @@ class IncomingInterface:
 
         # Storing the field names to use when writing data out.
         for field in range(record_info_in.num_fields):
-            field_name = reserved.reserved_words(record_info_in[field].name)
+            field_name = reserved_words(record_info_in[field].name, self.parent.case_sensitive)
             self.field_lists.append([field_name])
             self.headers.append(field_name)
             self.sql_list[field_name] = (str(record_info_in[field].type), record_info_in[field].size, record_info_in[field].scale)
@@ -343,10 +362,14 @@ class IncomingInterface:
         Handles writing out any residual data out.
         Called when the incoming connection has finished passing all of its records.
         """
-        con: snowflake.connector.connection = None
         
         if self.parent.alteryx_engine.get_init_var(self.parent.n_tool_id, 'UpdateOnly') == 'True' or not self.parent.is_initialized:
             return False
+        elif self.counter == 0:
+            self.parent.display_info('No records to process')
+            return False
+
+        con: snowflake.connector.connection = None
 
         # Outputting the link message that the file was written
         if len(self.csv_file) > 0 and self.parent.is_initialized:
@@ -367,7 +390,7 @@ class IncomingInterface:
 
         # clean key field
         if self.parent.key:
-            self.parent.key = reserved.reserved_words(self.parent.key)
+            self.parent.key = reserved_words(self.parent.key, self.parent.case_sensitive)
 
         # path to gzip files
         gzip_file = os.path.join(self.parent.temp_dir, self.parent.table).replace('\\', '//')
@@ -375,21 +398,32 @@ class IncomingInterface:
         # Create Snowflake connection
 
         try:
-            con = snowflake.connector.connect(
-                                            user=self.parent.user,
-                                            password=self.parent.decrypt_password,
-                                            account=self.parent.account,
-                                            warehouse=self.parent.warehouse,
-                                            database=self.parent.database,
-                                            schema=self.parent.schema,
-                                            ocsp_fail_open=True
-                                            )
+            if self.parent.auth_type == 'snowflake':
+                con = snowflake.connector.connect(
+                                                user=self.parent.user,
+                                                password=self.parent.decrypt_password,
+                                                account=self.parent.account,
+                                                warehouse=self.parent.warehouse,
+                                                database=self.parent.database,
+                                                schema=self.parent.schema,
+                                                ocsp_fail_open=True
+                                                )
+                self.parent.display_info('Authenticated via Snowflake')
+            else:
+                con = snowflake.connector.connect(
+                                                user=self.parent.user,
+                                                password=self.parent.decrypt_password,
+                                                authenticator=self.parent.okta_url,
+                                                account=self.parent.account,
+                                                warehouse=self.parent.warehouse,
+                                                database=self.parent.database,
+                                                schema=self.parent.schema,
+                                                ocsp_fail_open=True
+                                                )                
+                self.parent.display_info('Authenticated via Okta')
 
-
-            # Set warehouse and schema
-
-            con.cursor().execute(f"USE WAREHOUSE {self.parent.warehouse}")
-            con.cursor().execute(f"USE SCHEMA {self.parent.database}.{self.parent.schema}")
+            # fix table name if case sensitive used or keyswords
+            self.parent.table = reserved_words(self.parent.table, self.parent.case_sensitive)
         
             # Execute Table Creation #
             if self.parent.sql_type in ('create', 'update'):
@@ -436,5 +470,5 @@ class IncomingInterface:
         finally:
             if con:
                 con.close()
-        
+        self.parent.display_info(f'Processed {self.counter:,} records')
         self.parent.display_info('Snowflake transaction complete')
