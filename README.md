@@ -39,6 +39,9 @@ The gzipped files are not deleted automatically by the tool. The tool will creat
 
 <img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/logging.png" alt="Snowflake Temop folder">
 
+### Preserve Case Checkbox
+If you don't select the preserve case option then the fields will be created as provided by the upstream tool. These fields will be checked for validity and if found to be invalid they will automatically be quested so thet become case sensitive in Snowflake. This setting also applies to table names.
+
 |Import Note on Primary keys|
 |:---|
 |Snowflake does not enforce primary keys so setting as key will create a primary key and set the field as not allowing null values but it is still possible to append data to a table with duplicate valiues in the primary key field.|
@@ -52,7 +55,7 @@ The tool has no output.
 ## Example Configuration
 This workflow demonstrates the tool in use. The workflow shown here:
 
-<img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/configuration.png" width="1000" alt="Snowflake Workflow">
+<img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/configuration.png" width="500" alt="Snowflake Workflow">
 
 ## Technical Notes
 Internally the tool uses the Snowplake `PUT` command to bulk upload files so is very efficient. The process is as follows:
