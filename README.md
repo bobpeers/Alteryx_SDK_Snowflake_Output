@@ -21,6 +21,11 @@ The tool will be installed in the __Connectors__ category.
 
 The tool installs the official [Snowflake Connector library](https://docs.snowflake.com/en/user-guide/python-connector.html)
 
+## Authorisation
+This can be either via Snowflake or Okta. If you select Okta authentication this must be set up on the server according to the [Snowflake Instructions](https://docs.snowflake.com/en/user-guide/admin-security-fed-auth-configure-snowflake.html). 
+
+<img src='https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/okta.gif' width=500px alt='Snowflake Okta Authentication'>
+
 ## Usage
 Configure the tool using the setting for you Snowflake instance. Note that the account is the string to the left of __snowflakecomputing.com__ in your URL.
 
