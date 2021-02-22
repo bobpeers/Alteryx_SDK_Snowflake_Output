@@ -7,7 +7,7 @@
   <script type="text/javascript">
     document.write('<link rel="import" href="' + window.Alteryx.LibDir + '2/lib/includes.html">');
   </script>
-  
+
   <style>
     label {
       color: #313a49;
@@ -18,7 +18,7 @@
     }
 
     fieldset {
-      border:none;
+      border: none;
     }
 
     #auth {
@@ -54,6 +54,7 @@
       margin-top: 0.625em;
       margin-left: 10px;
     }
+
     .header-message {
       color: #000;
       font-weight: bold;
@@ -68,8 +69,9 @@
 <body>
   <div class="header-message">
     <h2>XMSG("Snowflake Output")</h2>
-    <hr class="header-ruler"></hr>
-    </div>
+    <hr class="header-ruler">
+    </hr>
+  </div>
   <form>
     <fieldset>
       <section>
@@ -80,133 +82,137 @@
           <ayx data-ui-props='{type:"ToggleBar", widgetId:"AuthToggle"}'></ayx>
 
           <div id='authSnowflake'>
-          <label>XMSG("Username")</label>
-          <ayx data-ui-props='{type:"TextBox", widgetId:"user"}' data-item-props="{dataName:'user'}"></ayx>
+            <label>XMSG("Username")</label>
+            <ayx data-ui-props='{type:"TextBox", widgetId:"user"}' data-item-props="{dataName:'user'}"></ayx>
 
-          <label>XMSG("Password")</label> 
-          <ayx data-ui-props='{type:"TextBox", widgetId:"password"}'></ayx>
+            <label>XMSG("Password")</label>
+            <ayx data-ui-props='{type:"TextBox", widgetId:"password"}'></ayx>
           </div>
 
           <div id="authOkta">
-          <label>XMSG("Okta URL")</label>
-          <ayx data-ui-props='{type:"TextBox", widgetId:"okta_url"}' data-item-props="{dataName:'okta_url'}"></ayx>
+            <label>XMSG("Okta URL")</label>
+            <ayx data-ui-props='{type:"TextBox", widgetId:"okta_url"}' data-item-props="{dataName:'okta_url'}"></ayx>
           </div>
         </fieldset>
 
         <label>XMSG("Account")</label>
-		    <ayx data-ui-props='{type:"TextBox", widgetId:"account"}' data-item-props="{dataName:'account'}"></ayx>
+        <ayx data-ui-props='{type:"TextBox", widgetId:"account"}' data-item-props="{dataName:'account'}"></ayx>
 
         <label>XMSG("Warehouse")</label>
-		<ayx data-ui-props='{type:"TextBox", widgetId:"warehouse"}' data-item-props="{dataName:'warehouse'}"></ayx>
+        <ayx data-ui-props='{type:"TextBox", widgetId:"warehouse"}' data-item-props="{dataName:'warehouse'}"></ayx>
 
         <label>XMSG("Database")</label>
         <ayx data-ui-props='{type:"TextBox", widgetId:"db"}' data-item-props="{dataName:'database'}"></ayx>
 
         <label>XMSG("Schema")</label>
         <ayx data-ui-props='{type:"TextBox", widgetId:"schema"}' data-item-props="{dataName:'schema'}"></ayx>
-		
-		<label>XMSG("Temp location (optional)")</label>
+
+        <label>XMSG("Temp location (optional)")</label>
         <ayx data-ui-props='{type:"FileBrowse", widgetId:"folder", browseType:"Folder"}'
           data-item-props="{dataName:'temp_dir'}"></ayx>
-		  
-		<label>XMSG("Table name")</label>
-        <ayx data-ui-props='{type:"TextBox", widgetId:"table"}' data-item-props="{dataName:'table'}"></ayx> 
 
-		    <ayx id="CaseSensitive" data-ui-props="{type:'CheckBox', label:'Preserve case in column names'}" data-item-props="{dataName:'case_sensitive'}"></ayx>
+        <label>XMSG("Table name")</label>
+        <ayx data-ui-props='{type:"TextBox", widgetId:"table"}' data-item-props="{dataName:'table'}"></ayx>
+
+        <ayx id="CaseSensitive" data-ui-props="{type:'CheckBox', label:'Preserve case in column names'}"
+          data-item-props="{dataName:'case_sensitive'}"></ayx>
 
       </section>
-      <hr class="header-ruler"></hr>
-	  <section>
+      <hr class="header-ruler">
+      </hr>
+      <section>
         <h2>XMSG("Output Option")</h2>
         <ayx data-ui-props='{type:"RadioGroup", widgetId:"SQLType"}'></ayx>
       </section>
-	  
 
-	   <section id='key'>
-		<label id='keyLabel'>XMSG("Key Field:")</label>
-    <ayx data-ui-props="{widgetId: 'key', type: 'DropDown', clearable: true}" data-item-props="{dataName: 'key', dataType: 'FieldSelector', fieldType: 'All', includeNoneOption: false, anchorIndex:'0', connectionIndex:'0'}"></ayx>
-    </section>
-	  
-	
-	  
+
+      <section id='key'>
+        <label id='keyLabel'>XMSG("Key Field:")</label>
+        <ayx data-ui-props="{widgetId: 'key', type: 'DropDown', clearable: true}"
+          data-item-props="{dataName: 'key', dataType: 'FieldSelector', fieldType: 'All', includeNoneOption: false, anchorIndex:'0', connectionIndex:'0'}">
+        </ayx>
+      </section>
+
+
+
     </fieldset>
   </form>
   <script type="text/javascript">
-  
+
 
     Alteryx.Gui.BeforeLoad = function (manager, AlteryxDataItems, json) {
 
-    // Create password data item
-    var passwordDataItem = new AlteryxDataItems.SimpleString('password', {password: true, encryptionMode: 'machine'})
-    manager.addDataItem(passwordDataItem)
-    // Bind to TextBox widget
-    manager.bindDataItemToWidget(passwordDataItem, 'password')
-			
-    // Radio Group
-    // -----------
-    var stringSelector = new AlteryxDataItems.StringSelector('sql_type', {
-      optionList: [
-        { label: 'XMSG("Create (drop if exists) + Insert")', value: "create" },
-        { label: 'XMSG("Delete existing records + Insert")', value: "truncate" },
-		{ label: 'XMSG("Append")', value: "append" },
-		{ label: 'XMSG("Update + Insert if new")', value: "update" },
-      ]
-    })
-    manager.addDataItem(stringSelector)
-    manager.bindDataItemToWidget(stringSelector, 'SQLType') // Bind to widget
-    window.Alteryx.Gui.Manager.getDataItem('sql_type').setValue('create')
+      // Create password data item
+      var passwordDataItem = new AlteryxDataItems.SimpleString('password', { password: true, encryptionMode: 'machine' })
+      manager.addDataItem(passwordDataItem)
+      // Bind to TextBox widget
+      manager.bindDataItemToWidget(passwordDataItem, 'password')
 
-    // Auth Toggle Bar
-    var stringSelector = new AlteryxDataItems.StringSelector('auth_type', {
-      optionList: [
-        {label: 'XMSG("Snowflake")', value: "snowflake"},
-        {label: 'XMSG("Okta")', value: "okta"}
-      ]
-    })
-    manager.addDataItem(stringSelector)
-    manager.bindDataItemToWidget(stringSelector, 'AuthToggle') // Bind to widget
-    window.Alteryx.Gui.Manager.getDataItem('auth_type').setValue('snowflake')
+      // Radio Group
+      // -----------
+      var stringSelector = new AlteryxDataItems.StringSelector('sql_type', {
+        optionList: [
+          { label: 'XMSG("Create (drop if exists) + Insert")', value: "create" },
+          { label: 'XMSG("Delete existing records + Insert")', value: "truncate" },
+          { label: 'XMSG("Append")', value: "append" },
+          { label: 'XMSG("Update + Insert if new")', value: "update" },
+        ]
+      })
+      manager.addDataItem(stringSelector)
+      manager.bindDataItemToWidget(stringSelector, 'SQLType') // Bind to widget
+      window.Alteryx.Gui.Manager.getDataItem('sql_type').setValue('create')
+
+      // Auth Toggle Bar
+      var stringSelector = new AlteryxDataItems.StringSelector('auth_type', {
+        optionList: [
+          { label: 'XMSG("Snowflake")', value: "snowflake" },
+          { label: 'XMSG("Okta")', value: "okta" }
+        ]
+      })
+      manager.addDataItem(stringSelector)
+      manager.bindDataItemToWidget(stringSelector, 'AuthToggle') // Bind to widget
+      window.Alteryx.Gui.Manager.getDataItem('auth_type').setValue('snowflake')
 
     }
 
-  const hide_options = () => {
-    var updateVal = Alteryx.Gui.Manager.getDataItem('sql_type').getValue()
-    if (updateVal == 'create' || updateVal == 'update') {
-      document.getElementById('key').style.display = 'block'
+    const hide_options = () => {
+      var updateVal = Alteryx.Gui.Manager.getDataItem('sql_type').getValue()
+      if (updateVal == 'create' || updateVal == 'update') {
+        document.getElementById('key').style.display = 'block'
 
-      if (updateVal == 'create') {
-        document.getElementById('keyLabel').innerText = 'Key field (optional)'
+        if (updateVal == 'create') {
+          document.getElementById('keyLabel').innerText = 'Key field (optional)'
+        }
+        else {
+          document.getElementById('keyLabel').innerText = 'Key field (required)'
+        }
       }
       else {
-        document.getElementById('keyLabel').innerText = 'Key field (required)'
+        document.getElementById('key').style.display = 'none'
+      }
+
+    }
+
+    const okta_toggle = () => {
+      var current_auth = Alteryx.Gui.Manager.getDataItem('auth_type').getValue()
+      if (current_auth == 'snowflake') {
+        document.getElementById('authOkta').style.display = 'none'
+      }
+      else {
+        document.getElementById('authOkta').style.display = 'block'
       }
     }
-    else {
-      document.getElementById('key').style.display = 'none'
+
+
+    Alteryx.Gui.AfterLoad = (manager, AlteryxDataItems) => {
+      // set update type options
+      hide_options()
+      manager.getDataItem('sql_type').registerPropertyListener('value', hide_options)
+
+      // set auth type options
+      okta_toggle()
+      manager.getDataItem('auth_type').registerPropertyListener('value', okta_toggle)
     }
-
-  }
-
-  const okta_toggle = () => {
-    var current_auth = Alteryx.Gui.Manager.getDataItem('auth_type').getValue()
-    if (current_auth == 'snowflake') {
-      document.getElementById('authOkta').style.display = 'none'
-    }
-    else {
-      document.getElementById('authOkta').style.display = 'block'
-    }
-  }
-
-
-  Alteryx.Gui.AfterLoad = (manager, AlteryxDataItems) => {
-    // set update type options
-    hide_options()
-    manager.getDataItem('sql_type').registerPropertyListener('value', hide_options)
-
-    // set auth type options
-    okta_toggle()
-    manager.getDataItem('auth_type').registerPropertyListener('value', okta_toggle)
-  }
   </script>
 </body>
 

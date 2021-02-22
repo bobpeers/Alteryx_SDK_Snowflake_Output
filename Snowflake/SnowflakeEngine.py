@@ -5,7 +5,7 @@ Although defining IncomingInterface is optional, the interface methods are neede
 
 import AlteryxPythonSDK as Sdk
 import xml.etree.ElementTree as Et
-from reserved import reserved_words
+import cleaner
 import time
 import csv
 import os
@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 import snowflake.connector
 import logging
 
-VERSION = '1.5'
+VERSION = '1.6'
 
 
 class AyxPlugin:
@@ -92,12 +92,17 @@ class AyxPlugin:
             setattr(AyxPlugin, item, root.find(item).text if item in str_xml else None)
 
         self.auth_type = root.find('auth_type').text  if 'auth_type' in str_xml else None
-        self.okta_url = root.find('okta_url').text  if 'okta_url' in str_xml else None
+        self.okta_url = root.find('okta_url').text if 'okta_url' in str_xml else None
         self.temp_dir = root.find('temp_dir').text  if 'temp_dir' in str_xml else None
         self.sql_type = root.find('sql_type').text  if 'sql_type' in str_xml else None
-        self.key = root.find('key').text  if 'key' in str_xml else None
+        self.key = root.find('key').text if 'key' in str_xml else None
         self.case_sensitive = root.find('case_sensitive').text == 'True' if 'case_sensitive' in str_xml else False
 
+        # fix for listrunner sending line feeds and spaces
+        self.okta_url = cleaner.sanitise_inputs(self.okta_url)
+        self.key = cleaner.sanitise_inputs(self.key)
+        self.temp_dir = cleaner.sanitise_inputs(self.temp_dir)
+            
         # check for okta url is using okta
         if self.auth_type == 'okta':
             if not self.okta_url:
@@ -115,6 +120,7 @@ class AyxPlugin:
         # data checks
         for item in self.input_list:
             attr = getattr(AyxPlugin, item, None)
+            attr = cleaner.sanitise_inputs(attr)
             if attr is None:
                 self.display_error_msg(f"Enter a valid {item}")
                 return False
@@ -293,7 +299,7 @@ class IncomingInterface:
 
         # Storing the field names to use when writing data out.
         for field in range(record_info_in.num_fields):
-            field_name = reserved_words(record_info_in[field].name, self.parent.case_sensitive)
+            field_name = cleaner.reserved_words(record_info_in[field].name, self.parent.case_sensitive)
             self.field_lists.append([field_name])
             self.headers.append(field_name)
             self.sql_list[field_name] = (str(record_info_in[field].type), record_info_in[field].size, record_info_in[field].scale)
@@ -390,7 +396,7 @@ class IncomingInterface:
 
         # clean key field
         if self.parent.key:
-            self.parent.key = reserved_words(self.parent.key, self.parent.case_sensitive)
+            self.parent.key = cleaner.reserved_words(self.parent.key, self.parent.case_sensitive)
 
         # path to gzip files
         gzip_file = os.path.join(self.parent.temp_dir, self.parent.table).replace('\\', '//')
@@ -423,7 +429,7 @@ class IncomingInterface:
                 self.parent.display_info('Authenticated via Okta')
 
             # fix table name if case sensitive used or keyswords
-            self.parent.table = reserved_words(self.parent.table, self.parent.case_sensitive)
+            self.parent.table = cleaner.reserved_words(self.parent.table, self.parent.case_sensitive)
         
             # Execute Table Creation #
             if self.parent.sql_type in ('create', 'update'):
@@ -464,11 +470,13 @@ class IncomingInterface:
 
                 con.cursor().execute(merge_query)
 
+            self.parent.display_info(f'Processed {self.counter:,} records')
+
         except Exception as e:
             logging.error(str(e))
             self.parent.display_error_msg(f'Error {e.errno} ({e.sqlstate}): {e.msg} ({e.sfqid})')
         finally:
             if con:
                 con.close()
-        self.parent.display_info(f'Processed {self.counter:,} records')
+
         self.parent.display_info('Snowflake transaction complete')
