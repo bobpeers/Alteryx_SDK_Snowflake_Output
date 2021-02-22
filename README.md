@@ -67,3 +67,7 @@ Internally the tool uses the Snowplake `PUT` command to bulk upload files so is 
 5. If updating we upload to a temporary table
 6. Data is copied from the staging area to the target table using `COPY`
 7. If updating, data is merged from the temporary table to the target table using `MERGE`
+
+## Updates
+If you use the Alteryx ListRunner macro this has a bug in the handling of empty configurations in the tool. Instead of sending blank entries it sends a carriage return along with spaces (by literally parsing the raw XML without removing new lines and spaces before the closing XML tag.
+The latest release (1.6) fixes this by sanitising the data.
