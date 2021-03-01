@@ -428,6 +428,10 @@ class IncomingInterface:
                                                 )                
                 self.parent.display_info('Authenticated via Okta')
 
+            # Set warehouse and schema
+            con.cursor().execute(f"USE WAREHOUSE {self.parent.warehouse}")
+            con.cursor().execute(f"USE SCHEMA {self.parent.database}.{self.parent.schema}")
+
             # fix table name if case sensitive used or keyswords
             self.parent.table = cleaner.reserved_words(self.parent.table, self.parent.case_sensitive)
         
