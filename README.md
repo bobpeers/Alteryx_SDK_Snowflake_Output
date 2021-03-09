@@ -8,6 +8,10 @@ The tools allows for:
 - Append data to an existing table
 - Update or insert new data in a table based on a common key
 
+## Advanced Options Include
+- Suspend the warehouse immediately after running (this will cause Snowflake to wait until current operations are finished first)
+- Auto delete temporary files created by the connector (gzipped files only, not log files)
+
 ## Installation
 Download the yxi file and double click to install in Alteyrx. 
 
@@ -35,9 +39,9 @@ If you do not select a temporary path then the tool will use the default Alteryx
 
 When running temp csv files will be written to this location before being gzipped and uploaded to Snowflake.
 
-The gzipped files are not deleted automatically by the tool. The tool will create multiple csv files with a maximum size of 25.000.000 records per file.
+The gzipped files are not deleted automatically by the tool unless you select the advanced option. The tool will create multiple csv files with a maximum size of 25.000.000 records per file.
 
-<img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/logging.png" alt="Snowflake Temop folder">
+<img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/logging.png" alt="Snowflake Temp folder">
 
 ### Preserve Case Checkbox
 If you don't select the preserve case option then the fields will be created as provided by the upstream tool. These fields will be checked for validity and if found to be invalid they will automatically be quested so thet become case sensitive in Snowflake. This setting also applies to table names.
@@ -67,7 +71,13 @@ Internally the tool uses the Snowplake `PUT` command to bulk upload files so is 
 5. If updating we upload to a temporary table
 6. Data is copied from the staging area to the target table using `COPY`
 7. If updating, data is merged from the temporary table to the target table using `MERGE`
+8. The warehouse if suspended if the option is selected (alter warehouse 'wh' suspend)
+9. Temporary files (gzip files only) are deleted if the option if selected
+
+|Import Note on Auto Suspending|
+|:---|
+|To automatically suspend the warehouse after running your user must have OPERATE permisions on the warehouse|
 
 ## Updates
 If you use the Alteryx ListRunner macro this has a bug in the handling of empty configurations in the tool. Instead of sending blank entries it sends a carriage return along with spaces (by literally parsing the raw XML without removing new lines and spaces before the closing XML tag.
-The latest release (1.6) fixes this by sanitising the data.
+The latest releases (1.6+) fixes this by sanitising the data.
