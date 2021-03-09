@@ -9,6 +9,7 @@ import cleaner
 import time
 import csv
 import os
+import glob
 import gzip
 import multiprocessing
 import concurrent.futures
@@ -16,7 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 import snowflake.connector
 import logging
 
-VERSION = '1.6'
+VERSION = '1.7'
 
 
 class AyxPlugin:
@@ -50,6 +51,8 @@ class AyxPlugin:
         self.temp_dir: str = None
         self.key: str = None
         self.case_sensitive: bool = False
+        self.suspend_wh: bool = False
+        self.delete_tempfiles: bool = False
 
         self.is_initialized: bool = True
         self.single_input = None
@@ -97,6 +100,8 @@ class AyxPlugin:
         self.sql_type = root.find('sql_type').text  if 'sql_type' in str_xml else None
         self.key = root.find('key').text if 'key' in str_xml else None
         self.case_sensitive = root.find('case_sensitive').text == 'True' if 'case_sensitive' in str_xml else False
+        self.suspend_wh = root.find('supend_wh').text == 'True' if 'supend_wh' in str_xml else False
+        self.delete_tempfiles = root.find('delete_tempfiles').text == 'True' if 'delete_tempfiles' in str_xml else False
 
         # fix for listrunner sending line feeds and spaces
         self.okta_url = cleaner.sanitise_inputs(self.okta_url)
@@ -475,11 +480,28 @@ class IncomingInterface:
                 con.cursor().execute(merge_query)
 
             self.parent.display_info(f'Processed {self.counter:,} records')
+            
+            if self.parent.suspend_wh:
+                con.cursor().execute(f'alter warehouse {self.parent.warehouse} suspend')
+                self.parent.display_info('Suspended the warehouse')
 
         except Exception as e:
             logging.error(str(e))
             self.parent.display_error_msg(f'Error {e.errno} ({e.sqlstate}): {e.msg} ({e.sfqid})')
         finally:
+
+            # delete temporary files if selected
+            # Get a list of all the file paths that ends with .txt from in specified directory
+            if self.parent.delete_tempfiles:
+                fileList = glob.glob(f'{self.parent.temp_dir}/*.gz')
+                # Iterate over the list of filepaths & remove each file.
+                for filePath in fileList:
+                    try:
+                        self.parent.display_info(f'Removed temp file {filePath}')
+                        os.remove(filePath)
+                    except:
+                        self.parent.display_info(f'Unable to remove temp file {filePath}')
+
             if con:
                 con.close()
 

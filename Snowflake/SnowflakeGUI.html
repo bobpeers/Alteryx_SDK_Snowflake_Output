@@ -110,12 +110,17 @@
         <label>XMSG("Temp location (optional)")</label>
         <ayx data-ui-props='{type:"FileBrowse", widgetId:"folder", browseType:"Folder"}'
           data-item-props="{dataName:'temp_dir'}"></ayx>
-
+          
         <label>XMSG("Table name")</label>
         <ayx data-ui-props='{type:"TextBox", widgetId:"table"}' data-item-props="{dataName:'table'}"></ayx>
 
+        <h2>Advanced Options</h2>
         <ayx id="CaseSensitive" data-ui-props="{type:'CheckBox', label:'Preserve case in column names'}"
           data-item-props="{dataName:'case_sensitive'}"></ayx>
+        <ayx id="Suspend" data-ui-props="{type:'CheckBox', label:'Suspend Warehouse immediately after running'}"
+          data-item-props="{dataName:'supend_wh'}"></ayx>
+        <ayx id="DeleteFiles" data-ui-props="{type:'CheckBox', label:'Remove temporary files after processing'}"
+          data-item-props="{dataName:'delete_tempfiles'}"></ayx>
 
       </section>
       <hr class="header-ruler">
