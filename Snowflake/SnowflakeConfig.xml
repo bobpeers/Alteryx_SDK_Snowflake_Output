@@ -9,10 +9,10 @@
   <Properties>
     <MetaInfo>
       <Name>Snowflake Output</Name>
-      <Description>Output data to Snowflake (v1.7)</Description>
+      <Description>Output data to Snowflake (v1.8)</Description>
       <CategoryName>Connectors</CategoryName>
       <SearchTags>snowflake, snow, database, saas, okta</SearchTags>
-      <ToolVersion>1.7</ToolVersion>
+      <ToolVersion>1.8</ToolVersion>
       <Author>Bob Peers</Author>
       <Company></Company>
       <Copyright>2021</Copyright>

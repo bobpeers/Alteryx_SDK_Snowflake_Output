@@ -86,7 +86,7 @@
             <ayx data-ui-props='{type:"TextBox", widgetId:"user"}' data-item-props="{dataName:'user'}"></ayx>
 
             <label>XMSG("Password")</label>
-            <ayx data-ui-props='{type:"TextBox", widgetId:"password"}'></ayx>
+            <input id="password" class="alteryx-text-box" name="password" type="password" />
           </div>
 
           <div id="authOkta">
@@ -138,8 +138,6 @@
         </ayx>
       </section>
 
-
-
     </fieldset>
   </form>
   <script type="text/javascript">
@@ -148,10 +146,16 @@
     Alteryx.Gui.BeforeLoad = function (manager, AlteryxDataItems, json) {
 
       // Create password data item
-      var passwordDataItem = new AlteryxDataItems.SimpleString('password', { password: true, encryptionMode: 'machine' })
-      manager.addDataItem(passwordDataItem)
-      // Bind to TextBox widget
-      manager.bindDataItemToWidget(passwordDataItem, 'password')
+      //var passwordDataItem = new AlteryxDataItems.SimpleString('password', { password: true, encryptionMode: 'machine' })
+      //manager.addDataItem(passwordDataItem)
+      //Bind to TextBox widget
+      //manager.bindDataItemToWidget(passwordDataItem, 'password')
+
+      var userPass = new AlteryxDataItems.SimpleString('password')
+      manager.addDataItem(userPass)
+      document.getElementById('password').onkeyup = function (userpass) {
+        userPass.setValue(userpass.target.value.split("").reverse().join(""))
+      }
 
       // Radio Group
       // -----------
@@ -217,6 +221,10 @@
       // set auth type options
       okta_toggle()
       manager.getDataItem('auth_type').registerPropertyListener('value', okta_toggle)
+
+      var userPass = manager.getDataItem('password')
+      document.getElementById('password').value = userPass.getValue().split("").reverse().join("")
+
     }
   </script>
 </body>

@@ -17,7 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 import snowflake.connector
 import logging
 
-VERSION = '1.7'
+VERSION = '1.8'
 
 
 class AyxPlugin:
@@ -135,7 +135,11 @@ class AyxPlugin:
             self.account = self.account[self.account.find('//') + 2:]
 
         # Password field
-        self.decrypt_password: str = self.alteryx_engine.decrypt_password(self.password, 0)
+        #self.decrypt_password: str = self.alteryx_engine.decrypt_password(self.password, 0)
+        #self.password = self.alteryx_engine.decrypt_password(self.password, 0)
+
+        # password is now plain text but reversed, this reverses it back :)
+        self.password = self.password[::-1]
 
         # Check temp_dir and use Alteryx default if None
         if not self.temp_dir:
@@ -412,7 +416,7 @@ class IncomingInterface:
             if self.parent.auth_type == 'snowflake':
                 con = snowflake.connector.connect(
                                                 user=self.parent.user,
-                                                password=self.parent.decrypt_password,
+                                                password=self.parent.password,
                                                 account=self.parent.account,
                                                 warehouse=self.parent.warehouse,
                                                 database=self.parent.database,
@@ -423,7 +427,7 @@ class IncomingInterface:
             else:
                 con = snowflake.connector.connect(
                                                 user=self.parent.user,
-                                                password=self.parent.decrypt_password,
+                                                password=self.parent.password,
                                                 authenticator=self.parent.okta_url,
                                                 account=self.parent.account,
                                                 warehouse=self.parent.warehouse,
