@@ -18,7 +18,7 @@ The tools allows for:
 |Due to the way the Alteryx SDK encrypts passwords in a password text box it is not possible to publish these workflows to Alteryx Server and schedule them. For this reason the password field is now no longer encrypted.|
 
 ## Installation
-Download the yxi file and double click to install in Alteyrx. 
+Download the yxi file and double click to install in Alteryx. 
 
 <img src="https://github.com/bobpeers/Alteryx_SDK_Snowflake_Output/blob/main/images/install.png" width='500px' alt="Snowflake Install Dialog">
 
