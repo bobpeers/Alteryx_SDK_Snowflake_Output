@@ -13,10 +13,9 @@ The tools allows for:
 - Suspend the warehouse immediately after running (this will cause Snowflake to wait until current operations are finished first)
 - Auto delete temporary files created by the connector (gzipped files only, not log files)
 
-|Import Chnage to Password Field|
+| ⚠️ Import Change to Password Field|
 |:---|
-|Due to the way the Alteryx SDK encrypts passwords in a password text box it is not possible to publish these workflows to Alteryx Server and schedule
-them. For this reason the password field is now no longer encrypted.|
+|Due to the way the Alteryx SDK encrypts passwords in a password text box it is not possible to publish these workflows to Alteryx Server and schedule them. For this reason the password field is now no longer encrypted.|
 
 ## Installation
 Download the yxi file and double click to install in Alteyrx. 
@@ -52,7 +51,7 @@ The gzipped files are not deleted automatically by the tool unless you select th
 ### Preserve Case Checkbox
 If you don't select the preserve case option then the fields will be created as provided by the upstream tool. These fields will be checked for validity and if found to be invalid they will automatically be quested so thet become case sensitive in Snowflake. This setting also applies to table names.
 
-|Import Note on Primary keys|
+| ⚠️ Import Note on Primary keys|
 |:---|
 |Snowflake does not enforce primary keys so setting as key will create a primary key and set the field as not allowing null values but it is still possible to append data to a table with duplicate valiues in the primary key field.|
 
